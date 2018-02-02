@@ -86,3 +86,29 @@ dependencies {
 }
 ```
 Now you can run the application in the embeded tomcat by gradle bootrun
+6 Deploy your application to local or remote tomcat server
+6.1 Modify your application class (BackendDemoApplication)
+From
+```java
+@SpringBootApplication
+public class BackendDemoApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(BackendDemoApplication.class, args);
+	}
+}
+```
+To
+```java
+@SpringBootApplication
+public class BackendDemoApplication  extends SpringBootServletInitializer{
+
+	public static void main(String[] args) {
+		SpringApplication.run(BackendDemoApplication.class, args);
+	}
+	@Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+        return application.sources(BackendDemoApplication.class);
+    }
+}
+```
