@@ -1,32 +1,59 @@
 buildscript {
-	ext {
-		springBootVersion = '1.5.10.RELEASE'
-	}
+	ext { springBootVersion = '1.5.10.RELEASE' }
 	repositories {
 		mavenCentral()
+		jcenter()
 	}
 	dependencies {
 		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		classpath "com.bmuschko:gradle-cargo-plugin:2.3"
 	}
 }
 
 apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'org.springframework.boot'
+apply plugin: 'war'
+apply plugin: 'com.bmuschko.cargo'
 
 group = 'org.exampel.demo'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
-repositories {
-	mavenCentral()
+repositories { mavenCentral() }
+
+def local = project.hasProperty('env') && project.getProperty('env') == 'local'
+ext{
+	tomcat=[ hostname : "localhost", username : "tomcat", password : "tomcat"]
+}
+cargoRedeployRemote{ dependsOn bootRepackage }
+cargoDeployRemote{ dependsOn bootRepackage }
+
+cargo {
+
+	containerId = 'tomcat9x'
+	port=8080
+	deployable { context = '/api' }
+
+	remote {
+		hostname =  "${tomcat.hostname}"
+		username =  "${tomcat.username}"
+		password =  "${tomcat.password}"
+		tomcat=[ manager: [url:'http://localhost:8080/manager/text' ] ]
+	}
 }
 
+configurations {
+	// exclude all default logging
+	all*.exclude module : 'spring-boot-starter-logging'
+}
 
 dependencies {
 	compile('org.springframework.boot:spring-boot-starter-data-jpa')
 	compile('org.springframework.boot:spring-boot-starter-data-rest')
 	compile('org.springframework.boot:spring-boot-starter-web')
+	compile('org.springframework.boot:spring-boot-starter-log4j2')
 	compile('mysql:mysql-connector-java')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 }
